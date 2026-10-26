@@ -10,6 +10,16 @@ cmake_minimum_required(VERSION 3.22)
 #               -DCMAKE_ASM_COMPILER=arm-none-eabi-gcc ..
 # ---------------------------------------------------------------------------
 
+# 若当前编译器不是 arm-none-eabi（例如 CLion 默认用了主机 gcc），自动切换到
+# 随 CLion 一起放置的交叉编译器，保证「打开即能编译」。
+if(NOT CMAKE_C_COMPILER MATCHES "arm-none-eabi")
+    set(_arm_gcc "D:/Clion/arm/bin/arm-none-eabi-gcc.exe")
+    if(EXISTS "${_arm_gcc}")
+        set(CMAKE_C_COMPILER   "${_arm_gcc}" CACHE FILEPATH "" FORCE)
+        set(CMAKE_ASM_COMPILER "${_arm_gcc}" CACHE FILEPATH "" FORCE)
+    endif()
+endif()
+
 # 裸机交叉编译：告诉 CMake 目标不是 Windows
 if(NOT CMAKE_SYSTEM_NAME)
     set(CMAKE_SYSTEM_NAME Generic)
@@ -65,10 +75,17 @@ target_link_options(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME} PRIVATE c m)
 
 # ------------------------------------------------------ hex / bin 产物 ------
+# 用与编译器同目录的 arm-none-eabi-objcopy（CLion 默认的 CMAKE_OBJCOPY 可能是主机版）
+get_filename_component(_arm_bin_dir "${CMAKE_C_COMPILER}" DIRECTORY)
+find_program(ARM_OBJCOPY arm-none-eabi-objcopy.exe HINTS "${_arm_bin_dir}" NO_DEFAULT_PATH)
+if(NOT ARM_OBJCOPY)
+    set(ARM_OBJCOPY "${_arm_bin_dir}/arm-none-eabi-objcopy.exe")
+endif()
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O ihex   $<TARGET_FILE:${PROJECT_NAME}>
+    COMMAND "${ARM_OBJCOPY}" -O ihex   $<TARGET_FILE:${PROJECT_NAME}>
             ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.hex
-    COMMAND ${CMAKE_OBJCOPY} -O binary -S $<TARGET_FILE:${PROJECT_NAME}>
+    COMMAND "${ARM_OBJCOPY}" -O binary -S $<TARGET_FILE:${PROJECT_NAME}>
             ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.bin
     COMMENT "Building ${PROJECT_NAME}.hex and ${PROJECT_NAME}.bin"
     VERBATIM
