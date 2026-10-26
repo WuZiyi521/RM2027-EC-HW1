@@ -37,6 +37,7 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 Core/Src/main.c \
+Core/Src/gpio.c \
 Core/Src/stm32f1xx_it.c \
 Core/Src/stm32f1xx_hal_msp.c \
 Core/Src/syscalls.c \
@@ -103,7 +104,7 @@ Drivers/CMSIS/Device/ST/STM32F1xx/Source/Templates/system_stm32f1xx.c
 
 # ASM sources
 ASM_SOURCES =  \
-Core/Startup/startup_stm32f103xb.s
+Startup/startup_stm32f103xb.s
 
 # ASM sources
 ASMM_SOURCES = 
