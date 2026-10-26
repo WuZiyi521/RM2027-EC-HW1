@@ -1,0 +1,11 @@
+# build output
+build/
+*.o
+*.d
+*.lst
+*.map
+
+# editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
